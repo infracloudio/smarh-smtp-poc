@@ -1,0 +1,53 @@
+# This will start a haproxy and 1 TCP SMTP Relay Postfix services. haproxy will act as a loadbalancer.
+
+version: "3.9"
+services:
+    postfix-1:
+      container_name: postfix-1
+      image: juanluisbaptiste/postfix:latest
+      ports:
+            - 8025:25
+      env_file:
+            - .env
+      restart: always
+      volumes:
+            - "/etc/localtime:/etc/localtime:ro"
+      #command: ["/bin/bash", "-c", “echo 'smtpd_upstream_proxy_protocol = haproxy' > /etc/postfix/main.cf"]
+      networks:
+        - smtp-network
+
+
+    postfix-2:
+      container_name: postfix-2
+      image: juanluisbaptiste/postfix:latest
+      ports:
+            - 9025:25
+      env_file:
+            - .env
+      restart: always
+      volumes:
+            - "/etc/localtime:/etc/localtime:ro"
+      #command: ["/bin/bash", "-c", “echo 'smtpd_upstream_proxy_protocol = haproxy' > /etc/postfix/main.cf"]
+      networks:
+        - smtp-network
+
+    haproxy:
+      image: haproxy:latest
+      container_name: haproxy
+      volumes:
+          - ./haproxy:/haproxy-override
+          - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      links:
+          - postfix-1
+          - postfix-2
+      depends_on:
+          - postfix-1
+          - postfix-2
+      ports:
+          - 25:25
+      networks:
+        - smtp-network
+
+networks:
+  smtp-network:
+    driver: bridge
