@@ -1,0 +1,60 @@
+version: "3.9"
+services:
+    postfix-1:
+      container_name: postfix-1
+      image: juanluisbaptiste/postfix:latest
+      ports:
+            - 8025:25
+      env_file:
+            - .env
+      restart: always
+      volumes:
+            - "/etc/localtime:/etc/localtime:ro"
+      #command: ["/bin/bash", "-c", “echo 'smtpd_upstream_proxy_protocol = haproxy' > /etc/postfix/main.cf"]
+      networks:
+        - smtp-network
+
+
+    postfix-2:
+      container_name: postfix-2
+      image: juanluisbaptiste/postfix:latest
+      ports:
+            - 9025:25
+      env_file:
+            - .env
+      restart: always
+      volumes:
+            - "/etc/localtime:/etc/localtime:ro"
+      #command: ["/bin/bash", "-c", “echo 'smtpd_upstream_proxy_protocol = haproxy' > /etc/postfix/main.cf"]
+      networks:
+        - smtp-network
+
+    nginx:
+      image: nginx:latest
+      container_name: nginx-mail
+      volumes:
+          - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      depends_on:
+          - postfix-1
+          - postfix-2
+          - auth
+      ports:
+          - 7025:25
+      networks:
+        - smtp-network
+    auth:
+      image: python:3
+      container_name: auth
+      entrypoint: ["python3","/usr/src/server.py"]
+      volumes:
+              - ./auth/server.py:/usr/src/server.py
+      depends_on:
+          - postfix-1
+          - postfix-2
+      ports:
+          - 8000:8000
+      networks:
+        - smtp-network
+networks:
+  smtp-network:
+    driver: bridge
