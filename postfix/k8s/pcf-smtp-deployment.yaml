@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pcf-smtp
+  namespace: default
+  labels:
+    app: pcf-smtp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pcf-smtp
+  template:
+    metadata:
+      labels:
+        app: pcf-smtp
+    spec:
+      containers:
+        - name: pcf-smtp
+          image: ubuntu:22.04
+          ports:
+          - containerPort: 25
+          command: ['sh', '-c', '/mnt/config/setup.sh']
+          volumeMounts:
+            - name: config-volume
+              mountPath: /mnt/config/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: pcf-config
+            items:
+            - key: main.cf
+              path: main.cf
+            - key: setup.sh
+              path: setup.sh
+            defaultMode: 0555

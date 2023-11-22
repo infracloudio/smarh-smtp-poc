@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relay-smtp
+  namespace: default
+  labels:
+    app: relay-smtp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: relay-smtp
+  template:
+    metadata:
+      labels:
+        app: relay-smtp
+    spec:
+      containers:
+        - name: relay-smtp
+          image: ubuntu:22.04
+          ports:
+          - containerPort: 25
+          command: ['sh', '-c', '/mnt/config/setup.sh']
+          volumeMounts:
+            - name: config-volume
+              mountPath: /mnt/config/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: relay-config
+            items:
+            - key: main.cf
+              path: main.cf
+            - key: setup.sh
+              path: setup.sh
+            - key: transport
+              path: transport
+            defaultMode: 0555

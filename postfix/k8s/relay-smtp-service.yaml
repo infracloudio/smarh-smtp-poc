@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: relay-smtp-svc
+  namespace: default
+spec:
+  ports:
+  - port: 25
+    protocol: TCP
+    targetPort: 25
+  selector:
+    app: relay-smtp
+  type: ClusterIP
