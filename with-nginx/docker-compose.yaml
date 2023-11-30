@@ -1,5 +1,3 @@
-# This will start a haproxy and 1 TCP SMTP Relay Postfix services. haproxy will act as a loadbalancer.
-
 version: "3.9"
 services:
     postfix-1:
